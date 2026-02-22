@@ -1,8 +1,10 @@
 import express from "express";
 import cors from "cors";
+import fetch from "node-fetch";
 
 const app = express();
 const PORT = process.env.PORT || 10000;
+const OPENROUTER_API_KEY = process.env.OPENROUTER_API_KEY;
 
 /* ======================
    MIDDLEWARES
@@ -11,16 +13,16 @@ app.use(cors());
 app.use(express.json());
 
 /* ======================
-   RUTA DE PRUEBA
+   RUTA BASE
 ====================== */
 app.get("/", (req, res) => {
-  res.send("✅ Backend Formulemos IA activo");
+  res.send("✅ Backend Formulemos IA con DeepSeek activo");
 });
 
 /* ======================
-   API CHAT (SIMULADA)
+   API CHAT (DEEPSEEK)
 ====================== */
-app.post("/api/chat", (req, res) => {
+app.post("/api/chat", async (req, res) => {
   try {
     const { message } = req.body;
 
@@ -30,54 +32,50 @@ app.post("/api/chat", (req, res) => {
       });
     }
 
-    // RESPUESTA SIMULADA (como si fuera IA)
-    const simulatedResponse = {
-      titulo_proyecto: "Mejoramiento del acceso al agua potable en zona rural",
+    const prompt = `
+Eres un asistente experto en formulación de proyectos de inversión pública.
+A partir de la siguiente idea, formula un proyecto estructurado con:
 
-      problema: `La comunidad presenta dificultades en el acceso continuo y seguro al agua potable, lo que afecta la salud, el bienestar y el desarrollo social de sus habitantes.`,
+- Problema
+- Objetivo general
+- Objetivos específicos
+- Componentes
+- Resultados esperados
 
-      objetivo_general:
-        "Mejorar el acceso al agua potable en comunidades rurales mediante la implementación de soluciones sostenibles de abastecimiento.",
+Idea del proyecto:
+${message}
 
-      objetivos_especificos: [
-        "Diagnosticar la situación actual del acceso al agua en la comunidad.",
-        "Diseñar una solución técnica adecuada para el abastecimiento de agua potable.",
-        "Implementar infraestructura básica para la captación y distribución de agua.",
-        "Fortalecer las capacidades comunitarias para la gestión del sistema.",
-      ],
+Responde en español y de forma clara y estructurada.
+`;
 
-      componentes: [
-        {
-          nombre: "Diagnóstico participativo",
-          descripcion:
-            "Identificación de necesidades, fuentes hídricas y condiciones actuales del servicio.",
-        },
-        {
-          nombre: "Infraestructura de abastecimiento",
-          descripcion:
-            "Construcción o adecuación de sistemas de captación, almacenamiento y distribución de agua.",
-        },
-        {
-          nombre: "Gestión comunitaria",
-          descripcion:
-            "Capacitación a la comunidad para la operación y mantenimiento del sistema.",
-        },
-      ],
+    const response = await fetch("https://openrouter.ai/api/v1/chat/completions", {
+      method: "POST",
+      headers: {
+        "Authorization": `Bearer ${OPENROUTER_API_KEY}`,
+        "Content-Type": "application/json",
+      },
+      body: JSON.stringify({
+        model: "deepseek/deepseek-chat",
+        messages: [
+          { role: "user", content: prompt }
+        ],
+      }),
+    });
 
-      resultados_esperados: [
-        "Comunidad con acceso continuo a agua potable.",
-        "Reducción de enfermedades de origen hídrico.",
-        "Mejora en la calidad de vida de los habitantes.",
-      ],
-    };
+    const data = await response.json();
+
+    if (!data.choices || !data.choices[0]) {
+      throw new Error("Respuesta inválida de DeepSeek");
+    }
 
     res.status(200).json({
-      reply: simulatedResponse,
+      reply: data.choices[0].message.content,
     });
+
   } catch (error) {
-    console.error("Error en /api/chat:", error);
+    console.error("❌ Error DeepSeek:", error);
     res.status(500).json({
-      reply: "❌ Error interno del servidor",
+      reply: "❌ Error al conectar con el sistema inteligente",
     });
   }
 });
