@@ -16,6 +16,8 @@ app.get("/", (req, res) => {
 
 // 🤖 Ruta de IA
 app.post("/api/chat", async (req, res) => {
+  // lógica con DeepSeek
+});
   try {
     const userMessage = req.body.message;
 
