@@ -4,33 +4,40 @@ import cors from "cors";
 const app = express();
 
 /* =========================
-   MIDDLEWARES
+   MIDDLEWARES (OBLIGATORIOS)
 ========================= */
 app.use(cors());
 app.use(express.json());
 
 /* =========================
-   RUTA DE PRUEBA (SALUD)
+   RUTA DE SALUD
 ========================= */
 app.get("/", (req, res) => {
-  res.send("✅ Backend Formulemos IA activo");
+  res.status(200).send("✅ Backend Formulemos IA activo");
 });
 
 /* =========================
-   RUTA PRINCIPAL (PRUEBA SIN IA)
+   RUTA PRINCIPAL
 ========================= */
-app.post("/api/chat", async (req, res) => {
+app.post("/api/chat", (req, res) => {
   try {
-    const message = req.body.message;
+    const { message } = req.body;
+
+    if (!message || message.trim() === "") {
+      return res.status(400).json({
+        response: "❌ El mensaje está vacío."
+      });
+    }
 
     console.log("Mensaje recibido:", message);
 
-    return res.json({
+    return res.status(200).json({
       response: "✅ Backend activo. El mensaje fue recibido correctamente."
     });
 
   } catch (error) {
-    console.error("Error en /api/chat:", error);
+    console.error("ERROR EN /api/chat:", error);
+
     return res.status(500).json({
       response: "❌ Error interno del backend."
     });
@@ -38,10 +45,10 @@ app.post("/api/chat", async (req, res) => {
 });
 
 /* =========================
-   PUERTO (OBLIGATORIO RENDER)
+   PUERTO PARA RENDER
 ========================= */
 const PORT = process.env.PORT || 3000;
 
 app.listen(PORT, () => {
-  console.log(`🚀 Servidor Formulemos IA escuchando en puerto ${PORT}`);
+  console.log(`🚀 Backend activo en puerto ${PORT}`);
 });
