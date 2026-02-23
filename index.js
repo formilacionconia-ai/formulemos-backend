@@ -1,6 +1,5 @@
 import express from "express";
 import cors from "cors";
-import fetch from "node-fetch";
 
 const app = express();
 app.use(cors());
@@ -50,18 +49,19 @@ app.post("/api/chat", async (req, res) => {
 
     const data = await response.json();
 
+    console.log("📩 Respuesta OpenRouter:", data);
+
     if (!data.choices || !data.choices[0]?.message?.content) {
-      console.error("❌ Respuesta inválida de DeepSeek:", data);
-      return res
-        .status(500)
-        .json({ reply: "Respuesta inválida del sistema inteligente." });
+      return res.status(500).json({
+        reply: "Respuesta inválida del sistema inteligente."
+      });
     }
 
     res.json({
       reply: data.choices[0].message.content
     });
   } catch (error) {
-    console.error("❌ Error DeepSeek:", error);
+    console.error("❌ Error interno:", error);
     res.status(500).json({
       reply: "Error en el sistema inteligente."
     });
