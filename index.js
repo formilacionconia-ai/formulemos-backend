@@ -31,7 +31,7 @@ app.post("/api/chat", async (req, res) => {
           "X-Title": "Formulemos IA"
         },
         body: JSON.stringify({
-          model: "deepseek/deepseek-chat",
+          model: "openai/gpt-3.5-turbo",
           messages: [
             {
               role: "system",
