@@ -2,6 +2,10 @@ import express from "express";
 import cors from "cors";
 
 const app = express();
+console.log(
+  "🔑 OPENROUTER_API_KEY cargada:",
+  process.env.OPENROUTER_API_KEY ? "SÍ" : "NO"
+);
 
 /* =========================
    CONFIGURACIÓN BÁSICA
