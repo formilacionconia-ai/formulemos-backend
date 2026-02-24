@@ -13,13 +13,16 @@ console.log("Backend activo en puerto", PORT);
 
 app.post("/api/chat", async (req, res) => {
   try {
-    const { message } = req.body;
+    // Acepta message o prompt (compatibilidad total)
+    const userInput = req.body.message || req.body.prompt;
 
-    if (!message || typeof message !== "string") {
-      return res.status(400).json({ error: "Mensaje inválido" });
+    if (!userInput || typeof userInput !== "string") {
+      return res.status(400).json({
+        error: "Entrada inválida. Se esperaba un texto."
+      });
     }
 
-    const response = await fetch(
+    const openRouterResponse = await fetch(
       "https://openrouter.ai/api/v1/chat/completions",
       {
         method: "POST",
@@ -34,12 +37,31 @@ app.post("/api/chat", async (req, res) => {
           messages: [
             {
               role: "system",
-              content:
-                "Eres un asistente experto en formulación de proyectos de inversión pública y social, especializado en Marco Lógico y Teoría del Cambio. Debes estructurar respuestas claras, técnicas y aplicables al contexto colombiano."
+              content: `Eres Formulemos IA, un sistema inteligente especializado en la formulación de proyectos de inversión pública en Colombia.
+
+Tu función es apoyar a ciudadanos, organizaciones y entidades públicas en la estructuración técnica de proyectos, utilizando de manera rigurosa y articulada el Enfoque de Marco Lógico y la Teoría del Cambio.
+
+Actúas como formulador experto y evaluador técnico, asegurando coherencia lógica, claridad conceptual y alineación entre problemas, objetivos, resultados y actividades.
+
+Reglas obligatorias:
+- No inventes cifras, costos, indicadores oficiales ni normas específicas.
+- Usa lenguaje técnico, claro y profesional.
+- No respondas como asistente genérico.
+- No hagas suposiciones no derivadas del texto del usuario.
+- Si la información es insuficiente, formula supuestos explícitos.
+
+Estructura obligatoria:
+1. Descripción del problema central
+2. Población objetivo y ámbito territorial
+3. Objetivo general
+4. Objetivos específicos
+5. Teoría del Cambio (resumen narrativo)
+6. Marco Lógico (Fin, Propósito, Componentes, Actividades)
+7. Supuestos y riesgos`
             },
             {
               role: "user",
-              content: message
+              content: userInput
             }
           ],
           temperature: 0.3
@@ -47,15 +69,24 @@ app.post("/api/chat", async (req, res) => {
       }
     );
 
-    const data = await response.json();
+    const data = await openRouterResponse.json();
 
-    if (!data.choices || !data.choices[0]?.message?.content) {
+    console.log("Respuesta OpenRouter:", JSON.stringify(data, null, 2));
+
+    if (
+      !data ||
+      !data.choices ||
+      !data.choices[0] ||
+      !data.choices[0].message ||
+      !data.choices[0].message.content
+    ) {
       throw new Error("Respuesta inválida del modelo");
     }
 
     res.json({
       response: data.choices[0].message.content
     });
+
   } catch (error) {
     console.error("Error backend:", error.message);
     res.status(500).json({
